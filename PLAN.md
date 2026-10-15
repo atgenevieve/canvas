@@ -45,8 +45,8 @@ Apps will hold real people's data. The rule: **GitHub only ever sees a reference
   when a repro becomes a committed test.
 - **Never recorded:** password and payment fields (`type=password`, `autocomplete=cc-*`), and anything inside an
   element marked `data-canvas-private`, which records as "typed 12 characters". Screenshots blank those elements too.
-- **Retention:** steps and typed values are deleted 30 days after a thread is resolved (a daily cron). Screenshots,
-  the comment text and element facts stay behind Access, so the history still reads.
+- **Nothing is deleted automatically.** You delete by hand on the canvas: a whole thread, or just its recorded steps,
+  typed values and screenshots (the comment and element facts stay). Claude can't delete.
 - **Each project's pii-guard** (Whipsheet's `scripts/pii-guard.mjs` pattern) stays the last line of defence in its
   own repo.
 
@@ -73,7 +73,7 @@ cookies (which Safari blocks), no CORS, no second domain.
 | Path | What | Comes from Whipsheet |
 | --- | --- | --- |
 | `client/` | The package apps install (`npm i -D github:atgenevieve/canvas`): the Vite plugin, the overlay, the CLI | `app/comments.js` (pins, threads UI), `tools/comments.mjs` (CLI) |
-| `worker/` | The canvas service each project deploys: API, D1 migrations, R2, Live, GitHub inbox, retention cron, the board page | `src/worker.js` (most of it), `migrations/`, `app/app.js` (board pan and zoom), tests |
+| `worker/` | The canvas service each project deploys: API, D1 migrations, R2, Live, GitHub inbox, the board page | `src/worker.js` (most of it), `migrations/`, `app/app.js` (board pan and zoom), tests |
 | `skill/` | `canvas-comment`: how Claude handles a comment; copied into each project's `.claude/skills/` | `.claude/skills/canvas-round` (rewritten generic) |
 | `docs/SETUP.md` | Adding canvas to a project: its Worker, route, D1, R2, Access, GitHub token | `wrangler.jsonc` comments |
 
@@ -103,7 +103,7 @@ would get its own adapter, with the API kept host-neutral. A project's comments,
 database with another project's.
 
 Tables: `threads` (Whipsheet's, plus url, branch, commit, selector, component, source, viewport);
-`comments` (as now); `captures` (steps JSON, environment JSON, screenshot keys, `purge_after`).
+`comments` (as now); `captures` (steps JSON, environment JSON, screenshot keys).
 
 GitHub: a fine-grained token or a GitHub App for the project's repo, as Whipsheet's worker already supports. The PR is found
 with `GET /repos/{repo}/pulls?head={owner}:{branch}&state=open`; none means the inbox PR.
@@ -134,11 +134,11 @@ Each step ends deployed and usable.
    `canvas repro`.
 5. **Board.** Screens of any part of the app at phone and desktop width, live, with pins; screens defined by recorded
    steps.
-6. **Retention and polish.** The purge cron, `canvas-comment` skill, adopt in the new web app.
+6. **Delete and polish.** Delete a thread or just its capture, the `canvas-comment` skill, adopt in the new web app.
 
 ## Decided
 
 - Deployed per project, inside the project's own hosting.
 - Whipsheet's canvas stays frozen as it is.
-- Screenshots are kept; only steps and typed values are purged.
+- Nothing is deleted automatically; you delete threads or captures by hand.
 - The new web app adopts it first.
