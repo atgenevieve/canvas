@@ -46,7 +46,7 @@ Apps will hold real people's data. The rule: **GitHub only ever sees a reference
 - **Never recorded:** password and payment fields (`type=password`, `autocomplete=cc-*`), and anything inside an
   element marked `data-canvas-private`, which records as "typed 12 characters". Screenshots blank those elements too.
 - **Nothing is deleted automatically.** You delete by hand on the canvas: a whole thread, or just its recorded steps,
-  typed values and screenshots (the comment and element facts stay). Claude can't delete.
+  typed values and screenshots (the comment and element facts stay).
 - **Each project's pii-guard** (Whipsheet's `scripts/pii-guard.mjs` pattern) stays the last line of defence in its
   own repo.
 
