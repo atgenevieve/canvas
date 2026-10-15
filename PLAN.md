@@ -134,11 +134,11 @@ Each step ends deployed and usable.
    `canvas repro`.
 5. **Board.** Screens of any part of the app at phone and desktop width, live, with pins; screens defined by recorded
    steps.
-6. **Delete and polish.** Delete a thread or just its capture, the `canvas-comment` skill, adopt in the new web app.
+6. **Delete and polish.** Delete a thread or just its capture, the `canvas-comment` skill, and a `docs/SETUP.md` a Claude session in the app's own repo can follow start to finish.
 
 ## Decided
 
 - Deployed per project, inside the project's own hosting.
 - Whipsheet's canvas stays frozen as it is.
 - Nothing is deleted automatically; you delete threads or captures by hand.
-- The new web app adopts it first.
+- The new web app adopts it first, set up by a session in its own repo from `docs/SETUP.md`.
