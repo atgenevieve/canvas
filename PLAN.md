@@ -47,6 +47,9 @@ Apps will hold real people's data. The rule: **GitHub only ever sees a reference
   element marked `data-canvas-private`, which records as "typed 12 characters". Screenshots blank those elements too.
 - **Nothing is deleted automatically.** You delete by hand on the canvas: a whole thread, or just its recorded steps,
   typed values and screenshots (the comment and element facts stay).
+- **Storage view.** Next to the comment list, a tab lists every screenshot and capture: a thumbnail, its thread,
+  date and size, sortable by size or date, with the total used at the top. Select some and delete them there. R2 and D1
+  sizes are read from the stored objects, so the total is what Cloudflare bills.
 - **Each project's pii-guard** (Whipsheet's `scripts/pii-guard.mjs` pattern) stays the last line of defence in its
   own repo.
 
@@ -134,7 +137,7 @@ Each step ends deployed and usable.
    `canvas repro`.
 5. **Board.** Screens of any part of the app at phone and desktop width, live, with pins; screens defined by recorded
    steps.
-6. **Delete and polish.** Delete a thread or just its capture, the `canvas-comment` skill, and a `docs/SETUP.md` a Claude session in the app's own repo can follow start to finish.
+6. **Delete, storage and polish.** Delete a thread or just its capture, the storage view, the `canvas-comment` skill, and a `docs/SETUP.md` a Claude session in the app's own repo can follow start to finish.
 
 ## Decided
 
