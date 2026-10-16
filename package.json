@@ -19,6 +19,7 @@
     },
     "scripts": {
         "prepare": "node scripts/install-hooks.mjs",
+        "build:overlay": "node scripts/build-overlay.mjs",
         "typecheck": "tsc -p worker --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p client --noEmit && tsc -p examples/basic --noEmit",
         "lint": "eslint .",
         "test": "vitest run",
