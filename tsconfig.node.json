@@ -8,5 +8,7 @@
         "allowJs": true,
         "checkJs": true
     },
-    "include": ["worker/test", "worker/src/github-app.ts", "client", "scripts", "*.config.ts", "*.config.js"]
+    "include": ["worker/test", "worker/src/github-app.ts", "client", "scripts", "*.config.ts", "*.config.js"],
+    // The browser side has its own config (client/tsconfig.json).
+    "exclude": ["client/src/overlay", "client/test/overlay", "client/test/shots.browser.mjs"]
 }
