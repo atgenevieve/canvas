@@ -1,0 +1,9 @@
+{
+    // The overlay (browser code) and its tests, against the DOM's types.
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "lib": ["ES2023", "DOM", "DOM.Iterable"],
+        "types": []
+    },
+    "include": ["src/overlay", "test/recorder.test.ts"]
+}
