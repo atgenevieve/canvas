@@ -166,7 +166,7 @@ describe('screenshots, captures and the storage view', () => {
         expect(await bucket.head('uploads/' + b.id)).toBeNull();
         expect(await bucket.head('uploads/' + keep.id)).not.toBeNull();
         const cap = (await (await call('/api/threads/' + t.id + '/capture')).json()) as { capture: { shots: object }; shots: object };
-        expect(cap.shots).toEqual({ screen: BASE + '/api/uploads/' + keep.id });
+        expect(cap.shots).toEqual({ screen: 'api/uploads/' + keep.id });
         expect(cap.capture.shots).toEqual({ screen: keep.id });
         expect(await (await post('/api/uploads/delete', { ids: [] })).json()).toEqual({ deleted: 0 });
         expect((await post('/api/uploads/delete', { ids: ['../x'] })).status).toBe(400);
