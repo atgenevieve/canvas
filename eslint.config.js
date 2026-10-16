@@ -11,6 +11,10 @@ export default tseslint.config(
         languageOptions: { globals: globals.node },
     },
     {
+        files: ['client/src/overlay/**'],
+        languageOptions: { globals: globals.browser },
+    },
+    {
         rules: {
             '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
             '@typescript-eslint/no-explicit-any': 'error',

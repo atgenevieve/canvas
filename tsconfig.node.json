@@ -8,5 +8,7 @@
         "allowJs": true,
         "checkJs": true
     },
-    "include": ["worker/test", "worker/src/github-app.ts", "client", "scripts", "*.config.ts", "*.config.js"]
+    "include": ["worker/test", "worker/src/github-app.ts", "client", "scripts", "*.config.ts", "*.config.js"],
+    // The overlay runs in the browser: client/tsconfig.json checks it.
+    "exclude": ["client/src/overlay", "client/test/recorder.test.ts"]
 }

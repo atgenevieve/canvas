@@ -13,7 +13,7 @@
     },
     "scripts": {
         "prepare": "node scripts/install-hooks.mjs",
-        "typecheck": "tsc -p worker --noEmit && tsc -p tsconfig.node.json --noEmit",
+        "typecheck": "tsc -p worker --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p client --noEmit",
         "lint": "eslint .",
         "test": "vitest run",
         "pii": "node scripts/pii-guard.mjs --all"
