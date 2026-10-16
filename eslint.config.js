@@ -11,7 +11,7 @@ export default tseslint.config(
         languageOptions: { globals: globals.node },
     },
     {
-        files: ['client/src/overlay/**'],
+        files: ['client/src/overlay/**', 'client/src/board/**'],
         languageOptions: { globals: globals.browser },
     },
     {

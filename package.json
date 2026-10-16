@@ -22,6 +22,7 @@
         "build:overlay": "node scripts/build-overlay.mjs",
         "typecheck": "tsc -p worker --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p client --noEmit && tsc -p examples/basic --noEmit",
         "lint": "eslint .",
+        "build:board": "node scripts/build-board.mjs",
         "test": "vitest run",
         "pii": "node scripts/pii-guard.mjs --all"
     },
