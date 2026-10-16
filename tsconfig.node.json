@@ -10,5 +10,5 @@
     },
     "include": ["worker/test", "worker/src/github-app.ts", "client", "scripts", "*.config.ts", "*.config.js"],
     // The browser side has its own config (client/tsconfig.json).
-    "exclude": ["client/src/overlay", "client/test/overlay", "client/test/recorder.test.ts", "client/test/shots.browser.mjs"]
+    "exclude": ["client/src/overlay", "client/test/overlay", "client/test/recorder.test.ts", "client/test/shots.browser.mjs", "client/src/board", "client/test/board", "client/test/board.browser.mjs"]
 }

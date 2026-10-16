@@ -7,5 +7,5 @@
         "allowJs": true,
         "checkJs": true
     },
-    "include": ["src/overlay", "test/overlay", "test/recorder.test.ts", "../shared"]
+    "include": ["src/overlay", "src/board", "test/overlay", "test/board", "test/recorder.test.ts", "../shared"]
 }

@@ -2,10 +2,100 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Canvas</title>
+<link rel="stylesheet" href="board.css">
+<script type="module" src="board.js"></script>
 </head>
 <body>
-<p>The canvas is running. The board page comes in a later step; comments are made from the app itself.</p>
+<header class="bar">
+  <span class="project" id="project"></span>
+  <span class="sp"></span>
+  <div class="seg" role="tablist" aria-label="View">
+    <button type="button" role="tab" id="tab-board" aria-selected="true" aria-controls="board-view">Board</button>
+    <button type="button" role="tab" id="tab-storage" aria-selected="false" aria-controls="storage-view">Storage</button>
+  </div>
+  <button type="button" class="btn primary" id="comment" aria-pressed="false" aria-keyshortcuts="C">Comment</button>
+</header>
+
+<div class="stage" id="board-view" role="tabpanel" aria-labelledby="tab-board">
+  <main class="viewport" id="viewport" aria-label="Board">
+    <div class="world" id="world"></div>
+    <div class="overlay">
+      <div class="layer" id="labels"></div>
+      <div class="layer" id="pins"></div>
+      <div class="layer" id="float"></div>
+    </div>
+    <button type="button" class="btn add" id="add-open">Add screen</button>
+    <div class="zoom" role="group" aria-label="Zoom">
+      <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+      <button type="button" id="zoom-level" class="level" aria-label="Zoom to 100%">100%</button>
+      <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+      <button type="button" id="zoom-fit">Fit</button>
+    </div>
+  </main>
+  <aside class="panel" id="panel" aria-label="Comments" data-sheet="down">
+    <button type="button" class="sheet" id="sheet" aria-expanded="false" aria-controls="threads">Comments</button>
+    <div class="panel-head" role="tablist" aria-label="Threads">
+      <button type="button" role="tab" id="list-open" aria-selected="true" aria-controls="threads">Open</button>
+      <button type="button" role="tab" id="list-resolved" aria-selected="false" aria-controls="threads">Resolved</button>
+    </div>
+    <div class="threads" id="threads" role="tabpanel"></div>
+  </aside>
+</div>
+
+<section class="storage" id="storage-view" role="tabpanel" aria-labelledby="tab-storage" hidden>
+  <div class="storage-in">
+    <p class="tot"><b id="st-total">0 B</b> <span id="st-counts"></span></p>
+    <div class="tools">
+      <select id="st-sort" class="btn" aria-label="Sort">
+        <option value="size">Sort: Size</option>
+        <option value="date">Sort: Date</option>
+      </select>
+      <button type="button" class="btn" id="st-resolved" aria-pressed="false">Resolved only</button>
+    </div>
+    <table>
+      <thead>
+        <tr><th class="cb"><span class="sr">Select</span></th><th class="thumb"><span class="sr">Preview</span></th><th>Thread</th><th>Kind</th><th class="date">Date</th><th class="n">Size</th></tr>
+      </thead>
+      <tbody id="st-rows"></tbody>
+    </table>
+    <div class="selbar" id="st-bar" role="region" aria-label="Selection" hidden>
+      <span id="st-selected" aria-live="polite"></span>
+      <button type="button" class="btn danger" id="st-delete">Delete</button>
+    </div>
+  </div>
+</section>
+
+<dialog id="confirm" aria-labelledby="confirm-text">
+  <form method="dialog">
+    <p id="confirm-text"></p>
+    <div class="row-end">
+      <button type="submit" class="btn" id="confirm-no" value="no">Cancel</button>
+      <button type="button" class="btn danger" id="confirm-yes">Delete</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="add-screen" aria-labelledby="add-title">
+  <form>
+    <h2 id="add-title">Add screen</h2>
+    <label class="fld">Name <input name="name" autocomplete="off" required></label>
+    <label class="fld">Path <input name="path" value="/" autocomplete="off" spellcheck="false" required></label>
+    <fieldset class="fld">
+      <legend>Sizes</legend>
+      <label><input type="checkbox" name="size" value="phone" checked> Phone</label>
+      <label><input type="checkbox" name="size" value="tablet"> Tablet</label>
+      <label><input type="checkbox" name="size" value="desktop" checked> Desktop</label>
+    </fieldset>
+    <p class="err" id="add-err" role="alert"></p>
+    <div class="row-end">
+      <button type="button" class="btn" id="add-cancel">Cancel</button>
+      <button type="submit" class="btn primary">Add</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
 </body>
 </html>
