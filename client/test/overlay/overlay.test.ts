@@ -278,15 +278,21 @@ describe('board messages', () => {
         const link = connectBoard({ replay: vi.fn(), mode, pins }, win);
         send({ canvas: 1, type: 'mode', comment: true });
         send({ canvas: 1, type: 'pins', threads: [] });
+        send({ canvas: 1, type: 'pins', threads: [], numbers: { ab3k9m2x: 2 }, selected: 'ab3k9m2x' });
         send({ canvas: 1, type: 'mode', comment: false }, 'https://evil.example.org');
         send({ canvas: 1, type: 'mode', comment: false }, location.origin, {});
         send({ type: 'mode', comment: false });
         send({ canvas: 1, type: 'mode', comment: 'yes' });
         expect(mode.mock.calls).toEqual([[true]]);
-        expect(pins).toHaveBeenCalledWith([]);
+        expect(pins.mock.calls).toEqual([
+            [[], { numbers: {}, selected: null }],
+            [[], { numbers: { ab3k9m2x: 2 }, selected: 'ab3k9m2x' }],
+        ]);
         const capture = assemble({ point: { x: 1, y: 2 } }, undefined, { steps: () => [], errors: () => [], failed: () => [] });
         link.picked(capture);
         expect(posted[1]).toEqual({ m: { canvas: 1, type: 'picked', capture }, origin: location.origin });
+        link.open('ab3k9m2x');
+        expect(posted[2]).toEqual({ m: { canvas: 1, type: 'open', id: 'ab3k9m2x' }, origin: location.origin });
         link.stop();
         expect(listeners).toHaveLength(0);
     });

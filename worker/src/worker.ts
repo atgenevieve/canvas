@@ -589,8 +589,8 @@ async function deleteUploads(env: Env, tell: Tell, input: Input): Promise<Respon
 // What the screenshots and captures take up, from the sizes recorded as each was saved, largest first.
 async function storage(env: Env): Promise<Response> {
     const { results } = await env.DB.prepare(
-        `SELECT 'shot' AS kind, id, thread_id, bytes, created_at FROM uploads
-         UNION ALL SELECT 'capture' AS kind, thread_id AS id, thread_id, bytes, created_at FROM captures
+        `SELECT 'shot' AS kind, kind AS shot_kind, id, thread_id, bytes, created_at FROM uploads
+         UNION ALL SELECT 'capture' AS kind, NULL AS shot_kind, thread_id AS id, thread_id, bytes, created_at FROM captures
          ORDER BY bytes DESC, created_at DESC`,
     ).all<StorageItem>();
     const total = { bytes: 0, shots: 0, captures: 0 };

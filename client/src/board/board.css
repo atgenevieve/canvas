@@ -180,25 +180,19 @@ body.commenting .frame iframe { pointer-events: auto; }
 .label .more { flex: none; margin-left: auto; width: 24px; height: 20px; border: 0; border-radius: 5px; background: none; color: var(--mute); line-height: 1; }
 .label .more:hover, .label .more[aria-expanded="true"] { background: var(--surface); color: var(--ink); }
 
-.pin {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 24px;
-    height: 24px;
-    margin: -12px 0 0 -12px;
-    padding: 0;
-    border: 0;
-    border-radius: 12px 12px 12px 2px;
+.num {
+    display: inline-block;
+    min-width: 18px;
+    height: 18px;
+    margin-right: 6px;
+    padding: 0 4px;
+    border-radius: 9px 9px 9px 2px;
     background: var(--pin);
     color: #fff;
-    font: 700 12px/24px system-ui, sans-serif;
+    font: 700 11px/18px system-ui, sans-serif;
     text-align: center;
-    box-shadow: 0 2px 6px rgb(0 0 0 / 0.25);
-    pointer-events: auto;
+    vertical-align: 1px;
 }
-.pin.resolved { background: var(--pin-resolved); }
-.pin.selected { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pin) 40%, transparent), 0 2px 6px rgb(0 0 0 / 0.25); }
 .pick { position: absolute; left: 0; top: 0; border-radius: 4px; box-shadow: 0 0 0 2px var(--brand); background: color-mix(in srgb, var(--brand) 8%, transparent); }
 
 .composer, .menu {

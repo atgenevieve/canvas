@@ -63,3 +63,9 @@ export function select(id: string | null): void {
 }
 
 export const threadById = (id: string | null): Thread | undefined => (id ? store.threads.find((t) => t.id === id) : undefined);
+
+/** Each open thread's number, oldest first: the list shows it, and the overlay in each frame puts it on the pin. */
+export function openNumbers(): Record<string, number> {
+    const open = store.threads.filter((t) => t.status === 'open').sort((a, b) => (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0));
+    return Object.fromEntries(open.map((t, i) => [t.id, i + 1]));
+}

@@ -13,7 +13,7 @@ interface ThreadJson {
 }
 interface StorageJson {
     total: { bytes: number; shots: number; captures: number };
-    items: { kind: 'shot' | 'capture'; id: string; thread_id: string | null; bytes: number; created_at: string }[];
+    items: { kind: 'shot' | 'capture'; shot_kind: 'element' | 'screen' | null; id: string; thread_id: string | null; bytes: number; created_at: string }[];
 }
 
 describe('screenshots, captures and the storage view', () => {
@@ -111,10 +111,10 @@ describe('screenshots, captures and the storage view', () => {
         const lonely = await uploaded(png(3000));
         const { total, items } = await storage();
         expect(items.map((i) => i.bytes)).toEqual([...items.map((i) => i.bytes)].sort((a, b) => b - a));
-        expect(items.find((i) => i.id === big.id)).toMatchObject({ kind: 'shot', thread_id: t.id, bytes: 4000 });
-        expect(items.find((i) => i.id === lonely.id)).toMatchObject({ kind: 'shot', thread_id: null, bytes: 3000 });
+        expect(items.find((i) => i.id === big.id)).toMatchObject({ kind: 'shot', shot_kind: 'screen', thread_id: t.id, bytes: 4000 });
+        expect(items.find((i) => i.id === lonely.id)).toMatchObject({ kind: 'shot', shot_kind: null, thread_id: null, bytes: 3000 });
         const cap = items.find((i) => i.kind === 'capture' && i.id === t.id);
-        expect(cap).toMatchObject({ thread_id: t.id });
+        expect(cap).toMatchObject({ shot_kind: null, thread_id: t.id });
         expect(cap?.bytes).toBeGreaterThan(100);
         expect(total).toEqual({
             bytes: items.reduce((n, i) => n + i.bytes, 0),

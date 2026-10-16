@@ -47,6 +47,7 @@ const overlay = `(() => {
     if (ev.origin !== location.origin || !ev.data || ev.data.canvas !== 1) return;
     const d = ev.data;
     if (d.type === 'mode') { comment = d.comment; document.documentElement.style.cursor = comment ? 'crosshair' : ''; }
+    if (d.type === 'pins') window.__pins = { found: d.threads.filter((t) => { try { return !!document.querySelector(t.selector); } catch { return false; } }).length, numbers: d.numbers, selected: d.selected };
     if (d.type === 'replay') {
       for (let i = 0; i < d.steps.length; i++) {
         const s = d.steps[i];
@@ -144,8 +145,8 @@ function seed() {
 const calls = [];
 function storage() {
     const items = [
-        ...db.uploads.map((u) => ({ kind: 'shot', id: u.id, thread_id: u.thread_id, bytes: u.bytes, created_at: u.created_at })),
-        ...db.captures.map((c) => ({ kind: 'capture', id: c.thread_id, thread_id: c.thread_id, bytes: c.bytes, created_at: c.created_at })),
+        ...db.uploads.map((u, i) => ({ kind: 'shot', shot_kind: u.thread_id ? (i % 2 ? 'element' : 'screen') : null, id: u.id, thread_id: u.thread_id, bytes: u.bytes, created_at: u.created_at })),
+        ...db.captures.map((c) => ({ kind: 'capture', shot_kind: null, id: c.thread_id, thread_id: c.thread_id, bytes: c.bytes, created_at: c.created_at })),
     ].sort((a, b) => b.bytes - a.bytes);
     return { total: { bytes: items.reduce((n, i) => n + i.bytes, 0), shots: db.uploads.length, captures: db.captures.length }, items };
 }
@@ -270,11 +271,15 @@ try {
         // the board: three screens, four frames, pins
         await page.goto(origin + '/__canvas/');
         await page.waitForFunction(() => document.querySelectorAll('.frame').length === 4);
-        await page.waitForFunction(() => document.querySelectorAll('.pin:not([hidden])').length >= 2, null, { timeout: 10000 });
+        const pinsSent = () =>
+            page.evaluate(() => [...document.querySelectorAll('.frame iframe')].reduce((n, f) => n + (f.contentWindow.__pins?.found || 0), 0));
+        for (let i = 0; i < 100 && (await pinsSent()) < 3; i++) await page.waitForTimeout(100);
         await settle(page);
         check(`${tag}: four frames for three screens`, (await page.locator('.frame').count()) === 4);
-        const pins = await page.locator('.pin:not([hidden])').count();
-        check(`${tag}: open threads pinned on their frames`, pins === 3, pins + ' pins');
+        const pins = await pinsSent();
+        check(`${tag}: open threads sent to their frames to pin`, pins === 3, pins + ' pins');
+        check(`${tag}: the board draws no pins of its own`, (await page.locator('#pins .pin').count()) === 0);
+        check(`${tag}: open threads numbered in the list`, (await page.locator('.thread .num').count()) === 2);
         const fail = await page.locator('.label .fail:not([hidden])').allTextContents();
         check(`${tag}: a replay that can't find its step is marked`, fail.join() === 'Step 1 failed', fail.join());
         const saved = await page.frames().find((f) => f.url().endsWith('?state=saved'))?.evaluate(() => !!document.querySelector('[role=status]'));
@@ -285,7 +290,7 @@ try {
         // a thread open, from the PR's link
         await page.goto(origin + '/__canvas/?thread=t1');
         await page.waitForSelector('.thread.selected');
-        await page.waitForFunction(() => document.querySelector('.pin.selected'));
+        await page.waitForFunction(() => [...document.querySelectorAll('.frame iframe')].some((f) => f.contentWindow.__pins?.selected === 't1'));
         await settle(page, 900);
         check(`${tag}: ?thread opens it`, (await page.locator('.thread.selected .msg').count()) === 2);
         await shoot(page, `thread-${w}x${h}`);

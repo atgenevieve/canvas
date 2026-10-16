@@ -292,10 +292,16 @@ try {
     const pickedMsg = fromOverlay.find((m) => m.type === 'picked');
     check('a pick in a frame sends picked with the capture', pickedMsg?.capture?.element?.component === 'App');
     await board.evaluate((threads) => {
-        document.getElementById('f').contentWindow.postMessage({ canvas: 1, type: 'pins', threads }, location.origin);
+        const numbers = Object.fromEntries(threads.map((t, i) => [t.id, i + 3]));
+        document.getElementById('f').contentWindow.postMessage({ canvas: 1, type: 'pins', threads, numbers, selected: null }, location.origin);
     }, state.threads);
     await frame.locator('canvas-overlay .pin').waitFor();
     check('pins from the board are drawn', (await frame.locator('canvas-overlay .pin').count()) === 1);
+    check("a framed pin shows the board's number", (await frame.locator('canvas-overlay .pin').textContent()) === '3');
+    await frame.locator('canvas-overlay .pin').click();
+    for (let i = 0; i < 30 && !fromOverlay.some((m) => m.type === 'open'); i++) await board.waitForTimeout(100);
+    check('a framed pin opens the thread on the board', fromOverlay.find((m) => m.type === 'open')?.id === state.threads[0].id);
+    check('and draws no popover of its own', (await frame.locator('canvas-overlay .pop:not([hidden])').count()) === 0);
 } finally {
     await browser.close();
     server.close();

@@ -120,6 +120,7 @@ export interface NewThread {
 
 export interface StorageItem {
     kind: 'shot' | 'capture';
+    shot_kind: 'element' | 'screen' | null; // which screenshot a shot is; null for a capture, or a shot no thread claimed
     id: string; // an upload id, or the thread id for a capture
     thread_id: string | null;
     bytes: number;
@@ -156,12 +157,14 @@ export interface Screen extends NewScreen {
 export type BoardMessage =
     | { canvas: 1; type: 'replay'; steps: Step[] }
     | { canvas: 1; type: 'mode'; comment: boolean }
-    | { canvas: 1; type: 'pins'; threads: Thread[] };
+    // numbers: each thread's number in the board's list; selected: the thread open there
+    | { canvas: 1; type: 'pins'; threads: Thread[]; numbers?: Record<string, number>; selected?: string | null };
 
 export type OverlayMessage =
     | { canvas: 1; type: 'ready'; url: string }
     | { canvas: 1; type: 'replayed'; ok: boolean; failedAt?: number }
-    | { canvas: 1; type: 'picked'; capture: Capture };
+    | { canvas: 1; type: 'picked'; capture: Capture }
+    | { canvas: 1; type: 'open'; id: string };
 
 export interface CanvasConfig {
     project: string;

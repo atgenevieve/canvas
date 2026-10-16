@@ -64,7 +64,7 @@ All bodies are JSON unless noted. Errors are `{ "error": "…" }` with a 4xx or 
 | `GET api/threads/:id/capture` | | `{ capture, shots: { element?, screen? } }`: shots as `api/uploads/:id` paths; 404 if none or deleted |
 | `POST api/uploads` | the image (`image/webp` or `image/png`, ≤ 5 MB) | `{ id, bytes }`. Uploaded before the thread that uses it |
 | `GET api/uploads/:id` | | the image |
-| `GET api/storage` | | `Storage`: the total, then every upload and capture with its size |
+| `GET api/storage` | | `Storage`: the total, then every upload and capture with its size; a shot's `shot_kind` is `element` or `screen` (null until a thread claims it) |
 | `POST api/threads/:id/capture/delete` | | `{ thread }`: steps, values and shots gone, thread and comments kept |
 | `POST api/threads/:id/delete` | | `{ deleted: true }`: the thread, its comments, capture and shots |
 | `POST api/uploads/delete` | `{ ids }` | `{ deleted: n }` |
@@ -95,9 +95,12 @@ steps to replay.
 | overlay | `{ type: "replayed", ok, failedAt? }` | done, or the index of the step that couldn't be found |
 | board | `{ type: "mode", comment: boolean }` | comment mode on or off for this frame |
 | overlay | `{ type: "picked", capture }` | an element picked in a frame; the board opens the comment box |
-| board | `{ type: "pins", threads }` | the open threads on this page, for the overlay to draw |
+| board | `{ type: "pins", threads, numbers, selected }` | the open threads on this page, each one's number in the board's list, and the one open there |
+| overlay | `{ type: "open", id }` | a pin was clicked; the board opens (or closes) that thread in its list |
 
-Inside a frame the overlay hides its own toolbar; the board's controls stand in for it.
+Inside a frame the overlay hides its own toolbar; the board's controls stand in for it. The overlay is the only thing
+that draws pins, in a frame as on its own, so a pin follows its element as the page scrolls and re-renders. In a frame
+a pin shows the thread's number in the board's list (open threads, oldest first) and opens it there.
 
 ## The overlay on its own
 

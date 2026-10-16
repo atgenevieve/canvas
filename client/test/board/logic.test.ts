@@ -112,6 +112,7 @@ describe('layout', () => {
 
 const item = (kind: 'shot' | 'capture', id: string, bytes: number, created_at: string, thread_id: string | null = 't1'): StorageItem => ({
     kind,
+    shot_kind: kind === 'shot' ? 'screen' : null,
     id,
     thread_id,
     bytes,

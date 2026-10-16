@@ -35,6 +35,12 @@ export async function loadStorage(): Promise<void> {
     render();
 }
 
+/** Screen, Element or Recording (mock 3A); a screenshot no thread claimed yet has no kind of its own. */
+function kindLabel(item: StorageItem): string {
+    if (item.kind === 'capture') return 'Recording';
+    return item.shot_kind === 'element' ? 'Element' : item.shot_kind === 'screen' ? 'Screen' : 'Screenshot';
+}
+
 function threadTitle(t: Thread | undefined): string {
     return t?.comments[0]?.body || '';
 }
@@ -68,7 +74,7 @@ function render() {
             h('td', { class: 'cb' }, box),
             h('td', { class: 'thumb' }, thumb),
             h('td', { class: 'title' + (item.thread_id ? '' : ' none') }, h('span', { text: title })),
-            h('td', { text: item.kind === 'shot' ? 'Screenshot' : 'Recording' }),
+            h('td', { text: kindLabel(item) }),
             h('td', { class: 'date', text: shortDate(item.created_at) }),
             h('td', { class: 'n', text: formatBytes(item.bytes) }),
         );

@@ -6,11 +6,12 @@ import type { ReplayResult } from './replay.ts';
 export interface BoardHandlers {
     replay(steps: Step[]): Promise<ReplayResult>;
     mode(comment: boolean): void;
-    pins(threads: Thread[]): void;
+    pins(threads: Thread[], board: { numbers: Record<string, number>; selected: string | null }): void;
 }
 
 export interface BoardLink {
     picked(capture: Capture): void;
+    open(id: string): void;
     stop(): void;
 }
 
@@ -58,7 +59,8 @@ export function connectBoard(handlers: BoardHandlers, win: Window = window): Boa
         } else if (data.type === 'mode') {
             handlers.mode(data.comment);
         } else {
-            handlers.pins(data.threads);
+            const numbers = data.numbers && typeof data.numbers === 'object' ? data.numbers : {};
+            handlers.pins(data.threads, { numbers, selected: typeof data.selected === 'string' ? data.selected : null });
         }
     };
     win.addEventListener('message', onMessage);
@@ -66,6 +68,7 @@ export function connectBoard(handlers: BoardHandlers, win: Window = window): Boa
 
     return {
         picked: (capture) => send({ canvas: 1, type: 'picked', capture }),
+        open: (id) => send({ canvas: 1, type: 'open', id }),
         stop: () => win.removeEventListener('message', onMessage),
     };
 }

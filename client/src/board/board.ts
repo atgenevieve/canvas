@@ -1,5 +1,6 @@
 // The board: the app's screens, live, in same-origin frames on an infinite canvas, each at each of its sizes, with
-// their comment pins. Pan (drag empty space, two fingers, the wheel), zoom (ctrl-wheel, pinch), Fit. Drag a screen to
+// their comment pins. The overlay in each frame draws the pins (BoardMessage `pins`, with each thread's number in the
+// list); the board only tracks where they are, to bring one into view. Pan (drag empty space, two fingers, the wheel), zoom (ctrl-wheel, pinch), Fit. Drag a screen to
 // move it. Comment mode hands picking to the overlay in each frame (BoardMessage `mode`); its `picked` opens the
 // comment box here. Lifted from Whipsheet's review canvas (workers/canvas/app/app.js), without its boards and publish.
 import type { BoardMessage, Capture, OverlayMessage, Screen, Size, Thread } from '../../../shared/contract.ts';
@@ -8,7 +9,7 @@ import { ApiError, post } from './api.ts';
 import { bounds, type Box, type Cam, center, clamp, fitBox, FIT_PAD, fromCenter, MAX_Z, MIN_Z, panBy, toScreen, wheelFactor, zoomAt } from './camera.ts';
 import { byId, closeOnBackdrop, confirmDialog, h, isTyping } from './dom.ts';
 import { type FrameBox, framesOf, nextSpot, pinIn, screenBox, storedRect, threadOnScreen } from './layout.ts';
-import { emit, on, select, store, threadById, upsert } from './store.ts';
+import { emit, on, openNumbers, select, store, threadById, upsert } from './store.ts';
 
 interface FrameView {
     box: FrameBox;
@@ -20,7 +21,7 @@ interface FrameView {
     loaded: boolean;
     src: string;
     steps: string;
-    /** where each thread's pin is, in the frame's own pixels */
+    /** where each thread's pin is, in the frame's own pixels (the overlay in the frame draws it) */
     pins: Map<string, { x: number; y: number }>;
 }
 
@@ -46,7 +47,6 @@ let commentBtn: HTMLButtonElement;
 let cam: Cam = { x: 0, y: 0, z: 1 };
 let vw = 0, vh = 0, vx = 0, vy = 0;
 const frames = new Map<string, FrameView>();
-const pinEls = new Map<string, HTMLButtonElement>(); // frame key + ' ' + thread id
 let commenting = false;
 let active: string | null = null; // the frame that takes the pointer
 let draft: Draft | null = null;
@@ -77,7 +77,7 @@ export function initBoard(opts: { onProject: (name: string) => void }): void {
         for (const f of frames.values()) sendPins(f);
     });
     on('selected', () => {
-        drawPins();
+        for (const f of frames.values()) sendPins(f);
         if (store.selected) focusThread(store.selected);
     });
     // the frames' pages change under us (they're live apps): follow their elements
@@ -194,27 +194,7 @@ function draw() {
             f.label.style.maxWidth = Math.max(sw, 48) + 'px';
         }
     }
-    drawPins();
     if (draft) placeDraft(draft);
-}
-
-function drawPins() {
-    const open = store.threads.filter((t) => t.status === 'open');
-    for (const [key, el] of pinEls) {
-        const [fk, id] = key.split(' ');
-        const f = frames.get(fk);
-        const p = f?.pins.get(id);
-        const t = threadById(id);
-        const shown = !!(f && p && t && (t.status === 'open' || t.id === store.selected));
-        el.hidden = !shown;
-        if (!shown) continue;
-        const s = toScreen(cam, f.box.x + p.x, f.box.y + p.y);
-        el.style.transform = `translate(${s.x}px, ${s.y}px)`;
-        const n = open.indexOf(t);
-        el.textContent = n >= 0 ? String(n + 1) : '';
-        el.classList.toggle('selected', t.id === store.selected);
-        el.classList.toggle('resolved', t.status === 'resolved');
-    }
 }
 
 // ---- screens and their frames ----
@@ -372,7 +352,7 @@ function syncPinsSoon() {
     if (!pinTimer) pinTimer = requestAnimationFrame(() => ((pinTimer = 0), syncPins()));
 }
 
-// ---- pins: where each page's threads are in each frame ----
+// ---- pins: where each page's threads are in each frame, to bring one into view ----
 
 function frameDoc(f: FrameView): Document | null {
     try {
@@ -383,8 +363,7 @@ function frameDoc(f: FrameView): Document | null {
 }
 
 function syncPins() {
-    const seen = new Set<string>();
-    for (const [fk, f] of frames) {
+    for (const f of frames.values()) {
         f.pins.clear();
         // until its page has loaded, a frame's pins would sit where nothing is yet
         if (!f.loaded) continue;
@@ -410,22 +389,7 @@ function syncPins() {
             }
             if (!r || r.y + r.h < 0 || r.y > f.box.h || r.x + r.w < 0 || r.x > f.box.w) continue;
             f.pins.set(t.id, pinIn(r, f.box));
-            const key = fk + ' ' + t.id;
-            seen.add(key);
-            if (!pinEls.has(key)) {
-                const el = h('button', { type: 'button', class: 'pin', 'data-thread': t.id });
-                el.addEventListener('click', () => select(store.selected === t.id ? null : t.id));
-                pinEls.set(key, el);
-                pinLayer.append(el);
-            }
-            const words = t.words || t.component || '';
-            pinEls.get(key)!.setAttribute('aria-label', 'Comment' + (words ? ' on ' + words : '') + ', ' + f.box.screen.name + ' ' + f.box.size);
         }
-    }
-    for (const [key, el] of pinEls) {
-        if (seen.has(key)) continue;
-        el.remove();
-        pinEls.delete(key);
     }
     if (wantFocus) {
         const t = threadById(wantFocus);
@@ -442,7 +406,8 @@ function send(f: FrameView, msg: BoardMessage) {
 }
 
 function sendPins(f: FrameView) {
-    send(f, { canvas: 1, type: 'pins', threads: store.threads.filter((t) => t.status === 'open' && threadOnScreen(t, f.box.screen)) });
+    const threads = store.threads.filter((t) => t.status === 'open' && threadOnScreen(t, f.box.screen));
+    send(f, { canvas: 1, type: 'pins', threads, numbers: openNumbers(), selected: store.selected });
 }
 
 function onMessage(ev: MessageEvent) {
@@ -468,6 +433,8 @@ function onMessage(ev: MessageEvent) {
         syncPinsSoon();
     } else if (d.type === 'picked') {
         openDraft(f, d.capture);
+    } else if (d.type === 'open' && threadById(d.id)) {
+        select(store.selected === d.id ? null : d.id);
     }
 }
 

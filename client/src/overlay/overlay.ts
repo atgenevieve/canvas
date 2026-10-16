@@ -119,6 +119,9 @@ export function startOverlay(build: BuildInfo | undefined, deps: OverlayDeps): C
     let link: BoardLink | null = null;
     let corner: Corner = readCorner(build?.corner);
     let pinned: Thread[] = [];
+    // in a board's frame: each thread's number in the board's list, and the thread open there
+    let boardNumbers: Record<string, number> = {};
+    let boardSelected: string | null = null;
 
     // ---- placing things ----
     function outline(el: HTMLElement, box: Box | null): void {
@@ -496,14 +499,16 @@ export function startOverlay(build: BuildInfo | undefined, deps: OverlayDeps): C
         pinned = openHere(threads);
         const buttons: HTMLButtonElement[] = [];
         for (const t of pinned) {
+            const n = link ? boardNumbers[t.id] : undefined;
             const b = h('button', {
                 type: 'button',
                 class: 'pin',
-                'aria-label': `Comment thread, ${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}`,
-                'aria-expanded': String(t.id === openId),
-            }, String(t.comments.length || 1));
+                'aria-label': `Comment thread${n ? ` ${n}` : ''}, ${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}`,
+                'aria-expanded': String(t.id === (link ? boardSelected : openId)),
+            }, String(n ?? (t.comments.length || 1)));
             b.dataset.id = t.id;
-            b.addEventListener('click', () => (openId === t.id ? closeThread(true) : openThread(t.id)));
+            // in a frame the board's list shows the thread
+            b.addEventListener('click', () => (link ? link.open(t.id) : openId === t.id ? closeThread(true) : openThread(t.id)));
             buttons.push(b);
         }
         pinLayer.replaceChildren(...buttons);
@@ -830,10 +835,11 @@ export function startOverlay(build: BuildInfo | undefined, deps: OverlayDeps): C
         link = connectBoard({
             replay: (steps) => replay(steps),
             mode: setMode,
-            pins: (list) => {
+            pins: (list, board) => {
                 threads = list;
+                boardNumbers = board.numbers;
+                boardSelected = board.selected;
                 renderPins();
-                if (openId) renderThread();
             },
         });
     } else {

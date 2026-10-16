@@ -6,7 +6,7 @@ import { ApiError, post } from './api.ts';
 import { byId, h } from './dom.ts';
 import { ago, who } from './format.ts';
 import { pageKey, threadOnScreen } from './layout.ts';
-import { on, removeThread, select, store, threadById, upsert } from './store.ts';
+import { on, openNumbers, removeThread, select, store, threadById, upsert } from './store.ts';
 
 let panel: HTMLElement;
 let list: HTMLElement;
@@ -74,7 +74,8 @@ function render() {
     const a = document.activeElement as HTMLTextAreaElement | null;
     const keep = a?.tagName === 'TEXTAREA' && a.dataset.k && list.contains(a) ? { k: a.dataset.k, s: a.selectionStart, e: a.selectionEnd } : null;
     const scroll = list.scrollTop;
-    list.replaceChildren(...store.threads.filter((t) => t.status === which).map(threadEl));
+    const numbers = openNumbers();
+    list.replaceChildren(...store.threads.filter((t) => t.status === which).map((t) => threadEl(t, numbers[t.id])));
     list.scrollTop = scroll;
     if (keep) {
         const ta = list.querySelector<HTMLTextAreaElement>(`textarea[data-k="${keep.k}"]`);
@@ -83,14 +84,15 @@ function render() {
     }
 }
 
-function threadEl(t: Thread): HTMLElement {
+/** n: the number on its pin, for an open thread */
+function threadEl(t: Thread, n?: number): HTMLElement {
     const isOpen = t.id === store.selected;
     const first = t.comments[0];
     const meta = [first ? who(first.author, store.me) : who(t.created_by, store.me), ago(t.created_at), screenName(t)].filter(Boolean).join(' · ');
     const head = h(
         'button',
         { type: 'button', class: 'thread-head', 'aria-expanded': String(isOpen), onclick: () => select(isOpen ? null : t.id) },
-        h('span', { class: 'meta', text: meta }),
+        h('span', { class: 'meta' }, n ? h('span', { class: 'num', 'aria-label': 'Pin ' + n, text: String(n) }) : null, meta),
         t.component ? h('span', { class: 'el', text: t.component }) : null,
         !isOpen && first ? h('span', { class: 'body clamp', text: first.body }) : null,
         !isOpen && t.comments.length > 1 ? h('span', { class: 'more', text: t.comments.length - 1 + (t.comments.length === 2 ? ' reply' : ' replies') }) : null,
