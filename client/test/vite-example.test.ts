@@ -52,7 +52,7 @@ describe('examples/basic', () => {
         expect(html).toMatch(/window\.__CANVAS_BUILD__=\{"project":"canvas-example",.*"base":"\/__canvas","corner":"bottom-right"\}/);
         // li, strong, span (PersonRow); main, h1, ul, button, p (App). <PersonRow>, <App> and <StrictMode> get none.
         const sources = [...js.matchAll(/"data-canvas-src": "([^"]+)"/g)].map((m) => m[1]);
-        expect(sources).toEqual([10, 11, 11, 19, 20, 21, 26, 29].map((line) => `src/app.tsx:${line}`));
+        expect(sources).toEqual([10, 11, 11, 19, 20, 21, 26, 29, 30, 31].map((line) => `src/app.tsx:${line}`));
         expect(js.includes('Jordan Alvarez')).toBe(true);
     });
 

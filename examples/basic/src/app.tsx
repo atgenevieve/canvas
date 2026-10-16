@@ -27,6 +27,9 @@ export function App() {
                 Save
             </button>
             {saved && <p role="status">Saved</p>}
+            <label>
+                Note <input name="note" />
+            </label>
         </main>
     );
 }

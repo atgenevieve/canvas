@@ -24,6 +24,7 @@
         "lint": "eslint .",
         "build:board": "node scripts/build-board.mjs",
         "test": "vitest run",
+        "test:loop": "npm run build:overlay && npm run build:board && node tests/loop.browser.mjs",
         "pii": "node scripts/pii-guard.mjs --all"
     },
     "engines": {
@@ -39,6 +40,7 @@
     "devDependencies": {
         "@cloudflare/workers-types": "^5.20260928.1",
         "@eslint/js": "^10.0.1",
+        "@playwright/test": "^1.56.1",
         "@types/node": "^22.0.0",
         "esbuild": "^0.28.1",
         "eslint": "^10.11.0",

@@ -45,6 +45,8 @@ export interface Env {
     GITHUB_TOKEN?: string;
     GITHUB_APP_ID?: string;
     GITHUB_APP_KEY?: string;
+    // GitHub's API; a test points it at a fake
+    GITHUB_API?: string;
 }
 
 type Input = Record<string, unknown>;
@@ -729,11 +731,12 @@ async function inbox(env: Env, url: URL, thread: Thread, event: Event): Promise<
         return;
     }
     try {
-        const token = env.GITHUB_TOKEN ? env.GITHUB_TOKEN.trim() : await installationToken(env, repo);
-        const pr = (await branchPr(repo, thread.branch, token)) ?? (/^\d+$/.test(inboxPr) ? inboxPr : null);
+        const api = githubApi(env);
+        const token = env.GITHUB_TOKEN ? env.GITHUB_TOKEN.trim() : await installationToken(env, api, repo);
+        const pr = (await branchPr(api, repo, thread.branch, token)) ?? (/^\d+$/.test(inboxPr) ? inboxPr : null);
         if (!pr) return;
         const body = inboxMessage(thread, event, { link: url.origin + basePath(env) + '/', project: env.PROJECT || '' });
-        await github('POST', '/repos/' + repo + '/issues/' + pr + '/comments', token, { body });
+        await github(api, 'POST', '/repos/' + repo + '/issues/' + pr + '/comments', token, { body });
     } catch (e) {
         installation = null;
         console.error('GitHub inbox: ' + (e instanceof Error ? e.message : String(e)));
@@ -742,14 +745,14 @@ async function inbox(env: Env, url: URL, thread: Thread, event: Event): Promise<
 
 // The open pull request from this branch, remembered for five minutes so a burst of comments asks GitHub once; a
 // branch with none is remembered too. If GitHub can't say, the comment goes to the inbox and nothing is remembered.
-async function branchPr(repo: string, branch: string | null, token: string): Promise<string | null> {
+async function branchPr(api: string, repo: string, branch: string | null, token: string): Promise<string | null> {
     if (!branch) return null;
     const known = branchPrs.get(branch);
     if (known && Date.now() < known.until) return known.pr;
     const owner = repo.split('/')[0];
     let pr: string | null;
     try {
-        const pulls = await github<{ number: number }[]>('GET', '/repos/' + repo + '/pulls?head=' + encodeURIComponent(owner + ':' + branch) + '&state=open', token);
+        const pulls = await github<{ number: number }[]>(api, 'GET', '/repos/' + repo + '/pulls?head=' + encodeURIComponent(owner + ':' + branch) + '&state=open', token);
         pr = Array.isArray(pulls) && pulls[0] ? String(pulls[0].number) : null;
     } catch (e) {
         console.error('GitHub inbox: ' + (e instanceof Error ? e.message : String(e)));
@@ -761,11 +764,11 @@ async function branchPr(repo: string, branch: string | null, token: string): Pro
 
 // The app's token for its installation lasts an hour; it's kept until five minutes before then, and narrowed to this
 // repository's pull requests.
-async function installationToken(env: Env, repo: string): Promise<string> {
+async function installationToken(env: Env, api: string, repo: string): Promise<string> {
     if (installation && Date.now() < installation.until) return installation.token;
     const jwt = await appJwt(env.GITHUB_APP_ID || '', env.GITHUB_APP_KEY || '');
-    const { id } = await github<{ id: number }>('GET', '/repos/' + repo + '/installation', jwt);
-    const { token, expires_at } = await github<{ token: string; expires_at: string }>('POST', '/app/installations/' + id + '/access_tokens', jwt, {
+    const { id } = await github<{ id: number }>(api, 'GET', '/repos/' + repo + '/installation', jwt);
+    const { token, expires_at } = await github<{ token: string; expires_at: string }>(api, 'POST', '/app/installations/' + id + '/access_tokens', jwt, {
         repositories: [repo.split('/')[1]],
         permissions: { pull_requests: 'write' },
     });
@@ -773,8 +776,10 @@ async function installationToken(env: Env, repo: string): Promise<string> {
     return token;
 }
 
-async function github<T = unknown>(method: string, path: string, token: string, body?: object): Promise<T> {
-    const res = await fetch('https://api.github.com' + path, {
+const githubApi = (env: Env) => (env.GITHUB_API || 'https://api.github.com').replace(/\/+$/, '');
+
+async function github<T = unknown>(api: string, method: string, path: string, token: string, body?: object): Promise<T> {
+    const res = await fetch(api + path, {
         method,
         headers: {
             authorization: 'Bearer ' + token,
