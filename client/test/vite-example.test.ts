@@ -24,13 +24,13 @@ afterAll(() => {
     fs.rmSync(out, { recursive: true, force: true });
 });
 
-async function buildExample(canvasFlag: boolean) {
-    const dir = path.join(out, canvasFlag ? 'canvas' : 'prod');
+async function buildExample(canvasFlag: boolean, minify = false) {
+    const dir = path.join(out, (canvasFlag ? 'canvas' : 'prod') + (minify ? '-min' : ''));
     const before = process.env.CANVAS;
     if (canvasFlag) process.env.CANVAS = '1';
     else delete process.env.CANVAS;
     try {
-        await build({ root: EXAMPLE, logLevel: 'silent', build: { outDir: dir, emptyOutDir: true, minify: false } });
+        await build({ root: EXAMPLE, logLevel: 'silent', build: { outDir: dir, emptyOutDir: true, minify } });
     } finally {
         if (before === undefined) delete process.env.CANVAS;
         else process.env.CANVAS = before;
@@ -54,6 +54,12 @@ describe('examples/basic', () => {
         const sources = [...js.matchAll(/"data-canvas-src": "([^"]+)"/g)].map((m) => m[1]);
         expect(sources).toEqual([10, 11, 11, 19, 20, 21, 26, 29].map((line) => `src/app.tsx:${line}`));
         expect(js.includes('Jordan Alvarez')).toBe(true);
+    });
+
+    it('a minified CANVAS=1 build keeps component names, so the overlay can name what was picked', async () => {
+        const { js } = await buildExample(true, true);
+        expect(js).toMatch(/function App\(|["'`]App["'`]/);
+        expect(js).toMatch(/function PersonRow\(|["'`]PersonRow["'`]/);
     });
 
     it('in a production build, nothing is added', async () => {

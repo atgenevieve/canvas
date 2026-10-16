@@ -106,6 +106,12 @@ export default function canvas(options) {
                     __CANVAS_BASE__: JSON.stringify(base),
                 },
             };
+            // A CANVAS=1 build is minified, which renames components ("App" becomes "g"); keep their names so the overlay's
+            // label and the thread say which component was picked. Vite 8 bundles with Rolldown, Vite 7 with esbuild.
+            if (command === 'build') {
+                extra.esbuild = { keepNames: true };
+                extra.build = { rolldownOptions: { output: { keepNames: true } } };
+            }
             if (command === 'serve' && target) {
                 /** @type {Record<string, string>} */
                 const headers = {};
