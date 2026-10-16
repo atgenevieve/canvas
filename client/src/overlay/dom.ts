@@ -3,12 +3,12 @@
 import type { Masked, Value } from '../../../shared/contract.ts';
 
 export const MAX_WORDS = 120;
-const PRIVATE_ATTR = 'data-canvas-private';
+export const PRIVATE_ATTR = 'data-canvas-private';
 const SKIP_TEXT = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'SVG']);
 const NOT_TEXT_INPUTS = new Set(['checkbox', 'radio', 'button', 'submit', 'reset', 'file', 'image']);
 
 /** Marked `data-canvas-private`, on the element or any ancestor. */
-export function isPrivate(el: Element | null): boolean {
+export function isPrivate(el: Element | null | undefined): boolean {
     return !!el?.closest(`[${PRIVATE_ATTR}]`);
 }
 
