@@ -101,7 +101,9 @@ Inside a frame the overlay hides its own toolbar; the board's controls stand in 
 
 ## The overlay on its own
 
-Used directly on the app (not framed), the overlay shows its toolbar, a floating pill in the plugin's `corner`: comment mode (`C`), the open threads on this
+Used directly on the app (not framed), the overlay shows its toolbar, a floating pill in the plugin's `corner`. Drag
+it and it snaps to the nearest corner; the choice is kept in `localStorage` (`canvas:corner`) for that app in that
+browser and wins over the plugin's. The toolbar holds: comment mode (`C`), the open threads on this
 page, "Add to board", and a link to the board. It records steps from the moment it loads, always, in memory only;
 nothing leaves the page until you post a comment.
 
