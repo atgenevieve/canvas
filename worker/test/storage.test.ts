@@ -92,7 +92,7 @@ describe('screenshots, captures and the storage view', () => {
         const t = await newThread({ element: element.id, screen: screen.id });
         expect(t.has_capture).toBe(true);
         const res = (await (await call('/api/threads/' + t.id + '/capture')).json()) as { capture: { shots: object }; shots: object };
-        expect(res.shots).toEqual({ element: BASE + '/api/uploads/' + element.id, screen: BASE + '/api/uploads/' + screen.id });
+        expect(res.shots).toEqual({ element: 'api/uploads/' + element.id, screen: 'api/uploads/' + screen.id });
         expect(res.capture.shots).toEqual({ element: element.id, screen: screen.id });
         const rows = await db.prepare('SELECT id, thread_id, kind FROM uploads WHERE thread_id = ?1 ORDER BY kind').bind(t.id).all();
         expect(rows.results).toEqual([

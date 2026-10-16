@@ -480,7 +480,7 @@ async function getCapture(env: Env, id: string): Promise<Response> {
     const shots: { element?: string; screen?: string } = {};
     for (const u of ups.results as { id: string; kind: 'element' | 'screen' }[]) {
         ids[u.kind] = u.id;
-        shots[u.kind] = basePath(env) + '/api/uploads/' + u.id;
+        shots[u.kind] = 'api/uploads/' + u.id;
     }
     const capture = { ...(JSON.parse(row.json) as Capture), shots: ids };
     return json({ capture, shots }, 200, { 'cache-control': 'no-store' });
