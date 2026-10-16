@@ -1,0 +1,3 @@
+#!/bin/sh
+# Real people's data never gets committed (scripts/pii-guard.mjs). Never bypass with --no-verify.
+exec node "$(git rev-parse --show-toplevel)/scripts/pii-guard.mjs" --staged

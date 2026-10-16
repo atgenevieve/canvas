@@ -1,0 +1,10 @@
+{
+    "name": "@atgenevieve/canvas-client",
+    "version": "0.1.0",
+    "private": true,
+    "description": "What apps use: the canvas CLI now; the Vite plugin and the overlay from step 2.",
+    "type": "module",
+    "bin": {
+        "canvas": "bin/canvas.mjs"
+    }
+}

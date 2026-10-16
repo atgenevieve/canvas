@@ -1,0 +1,9 @@
+{
+    // The Worker's own code, against the Workers runtime's types (its tests are in ../tsconfig.node.json).
+    "extends": "../tsconfig.base.json",
+    "compilerOptions": {
+        "lib": ["ES2023"],
+        "types": ["@cloudflare/workers-types"]
+    },
+    "include": ["src"]
+}

@@ -1,0 +1,12 @@
+{
+    // Everything that runs in Node: the tests (on Miniflare), the CLI (JavaScript, checked through its JSDoc), the
+    // scripts and the configs.
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "lib": ["ES2023"],
+        "types": ["node"],
+        "allowJs": true,
+        "checkJs": true
+    },
+    "include": ["worker/test", "worker/src/github-app.ts", "client", "scripts", "*.config.ts", "*.config.js"]
+}
