@@ -9,6 +9,7 @@ main(process.argv.slice(2), {
     env: process.env,
     cwd: process.cwd(),
     out: (line) => process.stdout.write(line + '\n'),
+    warn: (line) => process.stderr.write(line + '\n'),
     readStdin: () => fs.readFileSync(0, 'utf8'),
 }).then(
     (code) => (process.exitCode = code),

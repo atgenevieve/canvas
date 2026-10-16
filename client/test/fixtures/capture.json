@@ -1,0 +1,49 @@
+{
+    "version": 1,
+    "element": {
+        "selector": "[data-testid=\"save-person\"]",
+        "words": "Save",
+        "tag": "button",
+        "role": "button",
+        "component": "PersonForm › Button",
+        "source": "src/client/people/person-form.tsx:88",
+        "rect": { "x": 24, "y": 612, "w": 342, "h": 44 }
+    },
+    "env": {
+        "url": "https://preview.example.org/people/4821?tab=notes",
+        "viewport": { "w": 390, "h": 844, "dpr": 3 },
+        "scheme": "dark",
+        "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
+        "branch": "claude/people-form",
+        "commit": "0123456789abcdef0123456789abcdef01234567",
+        "at": "2026-10-15T12:00:30.000Z"
+    },
+    "steps": [
+        { "t": 1760529600000, "kind": "nav", "url": "https://preview.example.org/people", "how": "load" },
+        { "t": 1760529601200, "kind": "click", "selector": "li:nth-of-type(3) > button.chip", "words": "Ruth Adeyemi", "x": 120, "y": 340 },
+        { "t": 1760529601500, "kind": "nav", "url": "https://preview.example.org/people/4821", "how": "push" },
+        { "t": 1760529603000, "kind": "input", "selector": "#email", "label": "Email", "value": "ruth.adeyemi@example.org" },
+        { "t": 1760529604000, "kind": "input", "selector": "#phone", "label": "Phone", "value": "(212) 555-0147" },
+        { "t": 1760529605000, "kind": "input", "selector": "[name=\"dues\"]", "value": "4821" },
+        { "t": 1760529606000, "kind": "input", "selector": "#name", "label": "Name", "value": "Ruth Adeyemi" },
+        { "t": 1760529607000, "kind": "input", "selector": "#notes", "value": "call after the meeting" },
+        { "t": 1760529608000, "kind": "input", "selector": "#password", "label": "Password", "value": { "masked": true, "length": 12 } },
+        { "t": 1760529609000, "kind": "change", "selector": "select#caucus", "label": "Caucus", "value": "green" },
+        { "t": 1760529610000, "kind": "change", "selector": "#agree", "value": true },
+        { "t": 1760529611000, "kind": "change", "selector": "#reminders", "value": false },
+        { "t": 1760529612000, "kind": "change", "selector": "[data-canvas-private] select", "value": { "masked": true, "length": 5 } },
+        { "t": 1760529613000, "kind": "key", "key": "Enter" },
+        { "t": 1760529614000, "kind": "key", "key": "Escape", "selector": "dialog" },
+        { "t": 1760529615000, "kind": "scroll", "selector": "window", "x": 0, "y": 1200 },
+        { "t": 1760529616000, "kind": "scroll", "selector": "ul.people", "x": 0, "y": 400 },
+        { "t": 1760529617000, "kind": "resize", "w": 820, "h": 1180 },
+        { "t": 1760529618000, "kind": "nav", "url": "https://preview.example.org/people/4821?tab=notes", "how": "replace" },
+        { "t": 1760529619000, "kind": "nav", "url": "https://preview.example.org/people", "how": "pop" },
+        { "t": 1760529620000, "kind": "click", "selector": "button.icon-back", "words": "", "x": 12, "y": 20 }
+    ],
+    "errors": [
+        { "t": 1760529606500, "message": "TypeError: Cannot read properties of undefined (reading 'name')", "stack": "TypeError: Cannot read properties of undefined (reading 'name')\n    at PersonForm (src/client/people/person-form.tsx:41:12)\n    at renderWithHooks" }
+    ],
+    "failed": [{ "t": 1760529607100, "method": "POST", "url": "https://preview.example.org/api/people/4821", "status": 500, "ms": 231 }],
+    "shots": { "element": "u1111111", "screen": "u2222222" }
+}
