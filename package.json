@@ -4,6 +4,12 @@
     "private": true,
     "description": "Comment on a live web app; Claude gets the element, the source and the steps, and private data stays out of GitHub.",
     "type": "module",
+    "exports": {
+        "./vite": {
+            "types": "./client/src/vite/index.d.mts",
+            "default": "./client/src/vite/index.mjs"
+        }
+    },
     "workspaces": [
         "client",
         "worker"
@@ -13,13 +19,20 @@
     },
     "scripts": {
         "prepare": "node scripts/install-hooks.mjs",
-        "typecheck": "tsc -p worker --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p client --noEmit",
+        "typecheck": "tsc -p worker --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p client --noEmit && tsc -p examples/basic --noEmit",
         "lint": "eslint .",
         "test": "vitest run",
         "pii": "node scripts/pii-guard.mjs --all"
     },
     "engines": {
         "node": ">=20"
+    },
+    "dependencies": {
+        "@babel/parser": "7.29.9",
+        "magic-string": "0.30.21"
+    },
+    "peerDependencies": {
+        "vite": "^7.0.0 || ^8.0.0"
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^5.20260928.1",
