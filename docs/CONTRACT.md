@@ -101,7 +101,7 @@ Inside a frame the overlay hides its own toolbar; the board's controls stand in 
 
 ## The overlay on its own
 
-Used directly on the app (not framed), the overlay shows its toolbar: comment mode (`C`), the open threads on this
+Used directly on the app (not framed), the overlay shows its toolbar, a floating pill in the plugin's `corner`: comment mode (`C`), the open threads on this
 page, "Add to board", and a link to the board. It records steps from the moment it loads, always, in memory only;
 nothing leaves the page until you post a comment.
 
@@ -115,7 +115,10 @@ Never the comment text, URL, `words`, author, steps, values or screenshots. The 
 
 ## The Vite plugin
 
-`canvas({ project, base?, target? })` from `@atgenevieve/canvas/vite`:
+`canvas({ project, base?, target?, corner? })` from `@atgenevieve/canvas/vite`. `corner` is where the overlay's
+toolbar sits: `'bottom-right'` (default), `'bottom-left'`, `'top-right'` or `'top-left'`; it's passed to the overlay in
+`window.__CANVAS_BUILD__`.
+
 
 - In `serve`, and in `build` when `CANVAS=1`: injects the overlay's script tag; adds `data-canvas-src="path:line"` to
   every host JSX element (paths relative to the project root); defines `__CANVAS_BRANCH__` and `__CANVAS_COMMIT__`.
