@@ -1,0 +1,42 @@
+// canvas repro ab3k9m2x: the steps recorded before the comment, replayed.
+// Selectors, words and URLs come from the page: check them for real data before committing.
+import { expect, test, type Page } from '@playwright/test';
+
+const BASE = process.env.BASE_URL ?? 'https://preview.example.org';
+
+/** Clicks the recorded selector, or the recorded words when the selector no longer finds one element. */
+async function click(page: Page, selector: string, words: string) {
+    const el = page.locator(selector);
+    if ((await el.count()) === 1) return el.click();
+    return page.getByText(words, { exact: true }).first().click();
+}
+
+test('canvas ab3k9m2x', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.goto(BASE + '/people');
+    await click(page, 'li:nth-of-type(3) > button.chip', 'Ruth Adeyemi');
+    await page.waitForURL(BASE + '/people/4821');
+    await page.locator('#email').fill('jordan.alvarez@example.org'); // Email
+    await page.locator('#phone').fill('(212) 555-0101'); // Phone
+    await page.locator('[name="dues"]').fill('3456');
+    await page.locator('#name').fill('Priya Nakamura'); // Name
+    await page.locator('#notes').fill('quill harbor meadow pebble');
+    await page.locator('#password').fill('xxxxxxxxxxxx'); // masked (12 chars): put a test value here
+    await page.locator('select#caucus').selectOption('green'); // Caucus
+    await page.locator('#agree').check();
+    await page.locator('#reminders').uncheck();
+    await page.locator('[data-canvas-private] select').selectOption('xxxxx'); // masked (5 chars): put a test value here
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Escape');
+    await page.evaluate(() => window.scrollTo(0, 1200));
+    await page.locator('ul.people').evaluate((el) => el.scrollTo(0, 400));
+    await page.setViewportSize({ width: 820, height: 1180 });
+    await page.waitForURL(BASE + '/people/4821?tab=notes');
+    await page.goBack(); // back or forward, to '/people'
+    await page.locator('button.icon-back').click();
+
+    // the comment was made on 'Save', PersonForm › Button at src/client/people/person-form.tsx:88
+    await expect(page.locator('[data-testid="save-person"]')).toBeVisible();
+    // TODO: assert what the comment asks for (`canvas show ab3k9m2x`).
+});

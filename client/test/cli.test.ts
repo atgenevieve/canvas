@@ -3,8 +3,11 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { main } from '../src/cli.mjs';
+
+const CAPTURE = JSON.parse(fs.readFileSync(new URL('./fixtures/capture.json', import.meta.url), 'utf8'));
+const WEBP = new Uint8Array([0x52, 0x49, 0x46, 0x46, 1, 2, 3, 4]);
 
 const BASE = 'https://preview.example.org/__canvas';
 const THREAD = {
@@ -41,6 +44,8 @@ let dir: string;
 let sent: Sent[];
 let lines: string[];
 let thread: typeof THREAD;
+let tmp: string;
+let warned: string[];
 
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json' } });
 
@@ -55,6 +60,10 @@ const mockFetch = (async (input: string | URL | Request, init: RequestInit = {})
     if (method === 'POST' && p === '/api/threads/' + thread.id + '/comments') return json({ thread }, 201);
     if (method === 'POST' && p === '/api/threads/' + thread.id + '/resolve') return json({ thread: { ...thread, status: 'resolved' } });
     if (method === 'POST' && p === '/api/threads/' + thread.id + '/reopen') return json({ thread });
+    if (method === 'GET' && p === '/api/threads/' + thread.id + '/capture')
+        return json({ capture: CAPTURE, shots: { element: 'api/uploads/u1111111', screen: 'api/uploads/u2222222' } });
+    if (method === 'GET' && p === '/api/uploads/u1111111') return new Response(WEBP, { headers: { 'content-type': 'image/webp' } });
+    if (method === 'GET' && p === '/api/uploads/u2222222') return new Response(WEBP, { headers: { 'content-type': 'image/png' } });
     return json({ error: 'No such thread.' }, 404);
 }) as typeof fetch;
 
@@ -64,8 +73,14 @@ const run = (argv: string[], { env = {}, stdin = '', fetch = mockFetch, cwd = di
         env: { CANVAS_ACCESS_CLIENT_ID: 'abc.access', CANVAS_ACCESS_CLIENT_SECRET: 'shh', ...env },
         cwd,
         out: (line) => lines.push(line),
+        warn: (line) => warned.push(line),
         readStdin: () => stdin,
+        tmpdir: tmp,
     });
+
+// the same canvas, with no capture for any thread (none recorded, or deleted)
+const noCapture = (async (input: string | URL | Request, init?: RequestInit) =>
+    String(input).endsWith('/capture') ? json({ error: 'No capture.' }, 404) : mockFetch(input, init)) as typeof fetch;
 
 beforeAll(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'canvas-cli-'));
@@ -73,9 +88,12 @@ beforeAll(() => {
     fs.mkdirSync(path.join(dir, 'src', 'deep'), { recursive: true });
 });
 afterAll(() => fs.rmSync(dir, { recursive: true, force: true }));
+afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'canvas-tmp-'));
     sent = [];
     lines = [];
+    warned = [];
     thread = structuredClone(THREAD);
 });
 
@@ -119,8 +137,8 @@ describe('the canvas CLI', () => {
         expect(JSON.parse(lines.join('\n')).map((t: { id: string }) => t.id)).toEqual(['ab3k9m2x']);
     });
 
-    it('shows a thread: the page, the element, the build and every comment', async () => {
-        await run(['show', 'ab3k9m2x']);
+    it("shows a thread without a capture: the page, the thread's element facts, the build and every comment", async () => {
+        await run(['show', 'ab3k9m2x'], { fetch: noCapture });
         const text = lines.join('\n');
         expect(text).toContain('Thread ab3k9m2x (open)');
         expect(text).toContain('Component: PersonRow › Chip');
@@ -131,6 +149,70 @@ describe('the canvas CLI', () => {
         expect(text).toContain('  Make "Jordan" bold');
         expect(text).toContain('Claude · ');
         expect(text).toContain('  Done.\n  In the chip.');
+    });
+
+    it('shows a thread with its capture: element, env, numbered steps, errors, failed requests, and saved screenshots', async () => {
+        await run(['show', 'ab3k9m2x']);
+        expect(sent.map((s) => s.url.slice(BASE.length))).toEqual(['/api/threads/ab3k9m2x', '/api/threads/ab3k9m2x/capture', '/api/uploads/u1111111', '/api/uploads/u2222222']);
+        expect(sent[2].headers).toMatchObject({ 'CF-Access-Client-Id': 'abc.access' });
+        const text = lines.join('\n');
+        expect(text).toContain('Thread ab3k9m2x (open)');
+        expect(text).toContain('  Make "Jordan" bold');
+        expect(text).not.toContain('Selector:  li:nth-of-type(3)'); // the capture's element, not the thread's copy
+        expect(text).toContain('  Selector:  [data-testid="save-person"]');
+        expect(text).toContain('  Component: PersonForm › Button');
+        expect(text).toContain('  Viewport:  390x844 @3x, dark');
+        expect(text).toContain('   1. +0.0s   load /people');
+        expect(text).toContain('   9. +8.0s   type •••• (12 chars) into Password (#password)');
+        expect(text).toContain('  21. +20.0s  click (button.icon-back)');
+        expect(text).toContain("  +6.5s TypeError: Cannot read properties of undefined (reading 'name')");
+        expect(text).toContain('      at PersonForm (src/client/people/person-form.tsx:41:12)');
+        expect(text).toContain('  POST https://preview.example.org/api/people/4821 → 500 (231ms)');
+        const element = path.join(tmp, 'canvas', 'ab3k9m2x', 'element.webp');
+        const screen = path.join(tmp, 'canvas', 'ab3k9m2x', 'screen.png');
+        expect(text).toContain('Screenshots\n  element:  ' + element + '\n  screen:   ' + screen);
+        expect(new Uint8Array(fs.readFileSync(element))).toEqual(WEBP);
+        expect(fs.existsSync(screen)).toBe(true);
+    });
+
+    it('shows raw JSON with --json', async () => {
+        await run(['show', 'ab3k9m2x', '--json']);
+        const data = JSON.parse(lines.join('\n'));
+        expect(data.thread.id).toBe('ab3k9m2x');
+        expect(data.capture).toEqual(CAPTURE);
+        expect(data.shots).toEqual({ element: 'api/uploads/u1111111', screen: 'api/uploads/u2222222' });
+        expect(data.files.element).toBe(path.join(tmp, 'canvas', 'ab3k9m2x', 'element.webp'));
+        lines = [];
+        await run(['show', 'ab3k9m2x', '--json'], { fetch: noCapture });
+        expect(JSON.parse(lines.join('\n'))).toMatchObject({ capture: null, files: {} });
+    });
+
+    it('writes a repro to the temp dir, never the repo, and warns that typed values may be real', async () => {
+        await run(['repro', 'ab3k9m2x']);
+        const file = path.join(tmp, 'canvas', 'ab3k9m2x', 'repro.spec.ts');
+        expect(lines).toEqual([file]);
+        expect(warned).toHaveLength(1);
+        expect(warned[0]).toMatch(/may be real data/);
+        const source = fs.readFileSync(file, 'utf8');
+        expect(source).toContain("const BASE = process.env.BASE_URL ?? 'https://preview.example.org';");
+        expect(source).toContain("fill('ruth.adeyemi@example.org')");
+        expect(fs.readdirSync(dir).sort()).toEqual(['canvas.config.json', 'src']);
+        expect(sent.map((s) => s.url.slice(BASE.length))).toEqual(['/api/threads/ab3k9m2x/capture']);
+    });
+
+    it('writes a fictional repro to --out without the warning', async () => {
+        await run(['repro', '--fictional', 'ab3k9m2x', '--out', 'e2e/repro.spec.ts']);
+        const file = path.join(dir, 'e2e', 'repro.spec.ts');
+        expect(lines).toEqual([file]);
+        expect(warned).toEqual([]);
+        expect(fs.readFileSync(file, 'utf8')).not.toContain('ruth.adeyemi@example.org');
+        fs.rmSync(path.join(dir, 'e2e'), { recursive: true });
+        await expect(run(['repro', 'ab3k9m2x', '--out'])).rejects.toThrow('--out needs a value');
+    });
+
+    it('says when there is no capture to repro', async () => {
+        await expect(run(['repro', 'ab3k9m2x'], { fetch: noCapture })).rejects.toThrow('ab3k9m2x has no capture');
+        expect(warned).toEqual([]);
     });
 
     it('replies, from stdin too, and resolves with --resolve, sending the canvas its own origin', async () => {
@@ -163,6 +245,8 @@ describe('the canvas CLI', () => {
     it('prints its usage for no command, and fails for an unknown one', async () => {
         expect(await run([])).toBe(0);
         expect(lines.join('\n')).toContain('canvas list [--open]');
+        expect(lines.join('\n')).toContain('canvas repro <code> [--fictional] [--out <file>]');
+        expect(lines.join('\n')).not.toContain('delete');
         expect(lines.join('\n')).not.toContain('@ts-check');
         expect(await run(['frobnicate'])).toBe(1);
         expect(sent).toEqual([]);
